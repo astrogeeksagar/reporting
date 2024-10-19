@@ -1,24 +1,11 @@
 @extends('frontend.layouts.main')
 @section('main-container')
-    <div>
-
-        <button id="print-table">Print Table</button>
-        <button id="download-csv">Download CSV</button>
-        <button id="download-json">Download JSON</button>
-        <button id="download-xlsx">Download XLSX</button>
-        <button id="download-pdf">Download PDF</button>
-        <button id="download-html">Download HTML</button>
-
-    </div>
-
     <div id="example-table"></div>
 
     <script>
         $(document).ready(function() {
-
-            let table; 
             let tableData = [];
-            let tableColumns = [];
+            let tableColumns = '';
             let datacount = 100;
             let csrfToken = "{{ csrf_token() }}";
             const postdata = {
@@ -26,7 +13,7 @@
             };
 
             const options = {
-                method: "POST",
+                method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': csrfToken
@@ -37,10 +24,7 @@
             fetch('/fetchemployee', options)
                 .then(response => response.json())
                 .then(data => {
-                    console.log("Fetched data:", data); 
-
                     if (data.length > 0) {
-                        // Define columns
                         tableColumns = [{
                                 title: "ID",
                                 field: "id",
@@ -74,6 +58,11 @@
                             {
                                 title: "Salary",
                                 field: "salary",
+                                bottomCalc: "sum",
+                                bottomCalcFormatter: function(cell) {
+                                    // Format sum to 2 decimal places
+                                    return cell.getValue().toFixed(2);
+                                },
                                 minWidth: 50,
                                 headerWordWrap: true
                             },
@@ -82,11 +71,10 @@
                                 field: "dob",
                                 minWidth: 50,
                                 headerWordWrap: true
-                            }
+                            },
                         ];
 
-                        // Process data and add to tableData
-                        data.forEach((element) => {
+                        data.forEach((element, index) => {
                             tableData.push({
                                 id: element.id,
                                 name: element.name,
@@ -98,82 +86,23 @@
                             });
                         });
 
-                        // Initialize Tabulator with data and columns
-                        table = new Tabulator("#example-table", {
-                            data: tableData, // Set fetched data
-                            columns: tableColumns, // Set column definitions
+                        var table = new Tabulator("#example-table", {
+                            data: tableData,
+                            columns: tableColumns,
                             movableRows: true,
                             layout: "fitColumns",
                             pagination: "local",
                             paginationSize: 10,
-                            paginationSizeSelector: [5, 10, 15, 20, 30, 40, 50],
+                            paginationSizeSelector: [1, 2, 3, 6, 8, 10],
                             movableColumns: true,
                             paginationCounter: "rows",
-                            printHeader: "<div style='text-align: center;'><h1>Employee Data</h1></div>", 
-                            printFooter: "<div style='text-align: center;'><h4>&copy; ZvertexIt</h4></div>", 
+                            printHeader: "<h1>Employee Data</h1>",
                         });
                     }
                 })
                 .catch(error => {
-                    console.log("Error fetching data:", error);
+                    console.log(error);
                 });
-
-            // Make sure the table variable is accessible in button click events
-            $("#print-table").on("click", function() {
-                if (table) {
-                    table.print(false, true);
-                } else {
-                    console.log("Table is not initialized yet.");
-                }
-            });
-
-            $("#download-csv").on("click", function() {
-                if (table) {
-                    table.download("csv", "data.csv");
-                } else {
-                    console.log("Table is not initialized yet.");
-                }
-            });
-
-            $("#download-json").on("click", function() {
-                if (table) {
-                    table.download("json", "data.json");
-                } else {
-                    console.log("Table is not initialized yet.");
-                }
-            });
-
-            $("#download-xlsx").on("click", function() {
-                if (table) {
-                    table.download("xlsx", "data.xlsx", {
-                        sheetname: "My Data"
-                    });
-                } else {
-                    console.log("Table is not initialized yet.");
-                }
-            });
-
-            $("#download-pdf").on("click", function() {
-                if (table) {
-                    table.download("pdf", "data.pdf", {
-                        orientation: "portrait",
-                        title: "Pdf Report"
-                    });
-                } else {
-                    console.log("Table is not initialized yet.");
-                }
-            });
-
-            $("#download-html").on("click", function() {
-                if (table) {
-                    table.download("html", "data.html", {
-                        style: true
-                    });
-                } else {
-                    console.log("Table is not initialized yet.");
-                }
-            });
-
         });
     </script>
 
